@@ -19,6 +19,8 @@ public class Problem2 extends BaseClass {
         // Step 2: Add/commit your outline of comments (required for full credit)
         // Step 3: Add code to solve the problem (add/commit as needed)
         // Start Solution Edits
+         //Hector Mauricio, HEM, 2/17/2025
+
         // Solve Challenge 1 here
         
         //initialize a variable for total set to 0
