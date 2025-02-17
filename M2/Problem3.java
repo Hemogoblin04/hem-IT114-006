@@ -17,7 +17,11 @@ public class Problem3 extends BaseClass {
         // Step 3: Add code to solve the problem (add/commit as needed)
         Object[] output = new Object[arr.length];
         // Start Solution Edits
+        //Hector Mauricio, HEM, 2/17/25
         
+        //iterate through each object inside of the array with a for loop
+        //check for object type with conditional and set them to there absolute value using math funtcions
+        //assign the values to there respective spots in the array
 
         // End Solution Edits
         System.out.println("Output: ");
