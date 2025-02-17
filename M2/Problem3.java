@@ -20,6 +20,22 @@ public class Problem3 extends BaseClass {
         //Hector Mauricio, HEM, 2/17/25
         
         //iterate through each object inside of the array with a for loop
+        for(int i =0; i < arr.length; i++){
+            // assigning a variable that allows me to check the current element for its type
+            Object value = arr[i];
+            if (value instanceof Integer){
+                output[i] = Math.abs((Integer)value);
+            }
+            else if (value instanceof Double){
+                output[i] = Math.abs((Double)value);
+            }
+            else if (value instanceof Float){
+                output[i] = Math.abs((Float)value);
+            }
+            else {
+                output[i] = value;
+            }
+        }
         //check for object type with conditional and set them to there absolute value using math funtcions
         //assign the values to there respective spots in the array
 
