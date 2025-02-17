@@ -15,19 +15,27 @@ public class Problem1 extends BaseClass {
         // Step 3: Add code to solve the problem (add/commit as needed)
         System.out.print("Output Array: ");
         // Start Solution Edits
-        
-        //use a boolean to handle placing commas
-        //start with a for each loop to iterate over the the different numbers in the array, 
-        //use an if statement to start filtering the even numbers from the odds
-        //use a nested if statement check boolean and place comma
-        //exit conditional and finish off the for loop
 
+        //use a boolean to handle placing commas
+        boolean yes = true;
+        //start with a for each loop to iterate over the the different numbers in the array,
+        for(int num : arr){
+        //use an if statement to start filtering the even numbers from the odds
+            if (num % 2 != 0){
+        //use a nested if statement check boolean and place commas
+                if (yes = true) {
+                    System.out.print(", ");
+                }
+        //exit conditional and finish off the for loop
+                System.out.print(num);
+            }
+        }
         // End Solution Edits
         System.out.println("");
         System.out.println("______________________________________");
     }
     public static void main(String[] args) {
-        final String ucid = "mt85"; // <-- change to your UCID
+        final String ucid = "hem"; // <-- change to your UCID
         // no edits below this line
         printHeader(ucid, 1);
         printOdds(array1,1);
