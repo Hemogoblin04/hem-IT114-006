@@ -18,20 +18,20 @@ public class Problem2 extends BaseClass {
         // Step 1: sketch out plan using comments (include ucid and date)
         // Step 2: Add/commit your outline of comments (required for full credit)
         // Step 3: Add code to solve the problem (add/commit as needed)
-        double total = 0;
         // Start Solution Edits
         // Solve Challenge 1 here
         
         //initialize a variable for total set to 0
         double total = 0;
         //loop through each number in an array
-        for (num : arr){
-
-        }
+        for (double num : arr){
         //add each number to eachother
-      
+            total += num;
+        }      
         // Solve Challenge 2 here
-        Object modifiedTotal = "?";
+        //format total to the second decimal place and assign it to modfied total
+        Object modifiedTotal = String.format("%.2f", total);
+
 
         // End Solution Edits
         System.out.println("Total Raw Value: " +total);
