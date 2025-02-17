@@ -15,6 +15,7 @@ public class Problem1 extends BaseClass {
         // Step 3: Add code to solve the problem (add/commit as needed)
         System.out.print("Output Array: ");
         // Start Solution Edits
+        //Hector Mauricio, HEM, 2/17/2025
 
         //use a boolean to handle placing commas
         boolean bool = true;
