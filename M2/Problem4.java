@@ -25,14 +25,27 @@ public class Problem4 extends BaseClass {
         // Step 1: sketch out plan using comments (include ucid and date)
         // Step 2: Add/commit your outline of comments (required for full credit)
         // Step 3: Add code to solve the problem (add/commit as needed)
-        String placeholderForModifiedPhrase = "";
+        String placeHolderModifiedPhrase = "";
         String placeholderForMiddleCharacters = "";
         
         for(int i = 0; i <arr.length; i++){
             // Start Solution Edits
-            
+
+            //store the original string in the current iteration that is being cleaned 
+            String original = arr[i];
+            //remove non-alphanumeric text using replaceAll function
+            String cleanedText = original.replaceAll("[^a-zA-Z0-9 ]", "");
+            //taking clean text and making it title text
+            String[] words = cleanedText.toLowerCase().split("\\s+"); 
+            StringBuilder titleCase = new StringBuilder();
+            for (String word : words){
+            if (!word.isEmpty()){
+                titleCase.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+            }
+            //lastly assign the final clean text to ModifiedPhrase
+            String modifiedPhrase = titleCase.toString().trim();
              // End Solution Edits
-            System.out.println(String.format("Index[%d] \"%s\" | Middle: \"%s\"",i, placeholderForModifiedPhrase, placeholderForMiddleCharacters));
+            System.out.println(String.format("Index[%d] \"%s\" | Middle: \"%s\"",i, placeHolderModifiedPhrase, placeholderForMiddleCharacters));
         }
 
        
