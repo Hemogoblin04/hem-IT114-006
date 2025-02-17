@@ -42,10 +42,22 @@ public class Problem4 extends BaseClass {
             if (!word.isEmpty()){
                 titleCase.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
             }
+        }
             //lastly assign the final clean text to ModifiedPhrase
             String modifiedPhrase = titleCase.toString().trim();
+            
+            //Extra credit for middle characters
+            String middleChars;
+            int len = modifiedPhrase.length();
+            if (len < 3) {
+            middleChars = "Not enough characters";
+            } else {
+            int midIndex = len / 2 - 1;
+            middleChars = modifiedPhrase.substring(midIndex, midIndex + 3);
+            }
+
              // End Solution Edits
-            System.out.println(String.format("Index[%d] \"%s\" | Middle: \"%s\"",i, placeHolderModifiedPhrase, placeholderForMiddleCharacters));
+            System.out.println(String.format("Index[%d] \"%s\" | Middle: \"%s\"",i, modifiedPhrase, middleChars));
         }
 
        
