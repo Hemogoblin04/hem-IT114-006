@@ -17,17 +17,18 @@ public class Problem1 extends BaseClass {
         // Start Solution Edits
 
         //use a boolean to handle placing commas
-        boolean yes = true;
+        boolean bool = true;
         //start with a for each loop to iterate over the the different numbers in the array,
         for(int num : arr){
         //use an if statement to start filtering the even numbers from the odds
             if (num % 2 != 0){
         //use a nested if statement check boolean and place commas
-                if (yes = true) {
+                if (!bool) {
                     System.out.print(", ");
                 }
         //exit conditional and finish off the for loop
                 System.out.print(num);
+                bool = false;
             }
         }
         // End Solution Edits
