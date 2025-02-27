@@ -50,9 +50,9 @@ public class CommandLineCalculator extends BaseClass {
             // i.e., 0.1 + 0.2 would show as one decimal place (0.3), 0.11 + 0.2 would shows
             // as two (0.31), etc
             //find max number of decimals
-            int decimal1 = string1.contains(".") ? string1.length() - string1.indexOf(".") - 1: 0;
-            int decimal2 = string2.contains(".") ? string2.length() - string2.indexOf(".") - 1: 0;
-            int decimals = decimal1 + decimal2;
+            int decimal1 = string1.contains(".") ? string1.length() - string1.indexOf(".") - 1 : 0;
+            int decimal2 = string2.contains(".") ? string2.length() - string2.indexOf(".") - 1 : 0;
+            int decimals = Math.max(decimal1, decimal2);
 
             String format = "%." + decimals + "f";
 
