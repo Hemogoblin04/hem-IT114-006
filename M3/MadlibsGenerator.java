@@ -41,7 +41,16 @@ public class MadLibsGenerator extends BaseClass {
         File[] stories = folder.listFiles();
         File randStory = stories[new Random().nextInt(stories.length)];
         // parse the story lines
-
+        try {
+            Scanner fileScanner = new Scanner(randStory);
+            while (fileScanner.hasNextLine()) {
+                lines.add(fileScanner.nextLine()); // Use the existing list
+            }
+            fileScanner.close();
+        } catch (Exception e) {
+            System.out.println("Error.");
+            return;
+        }
         // iterate through the lines
 
         // prompt the user for each placeholder (note: there may be more than one
