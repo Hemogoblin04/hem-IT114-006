@@ -52,9 +52,21 @@ public class MadLibsGenerator extends BaseClass {
             return;
         }
         // iterate through the lines
-
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            while (line.contains("<") && line.contains(">")) {
+                int start = line.indexOf("<");
+                int end = line.indexOf(">", start);
+                if (end == -1) break;
         // prompt the user for each placeholder (note: there may be more than one
         // placeholder in a line)
+                String placeholder = line.substring(start + 1, end).replace('_', ' ');
+                System.out.print("Enter a " + placeholder + ": ");
+                String userInput = scanner.nextLine();
+                line = line.substring(0, start) + userInput + line.substring(end + 1);
+            }
+            lines.set(i, line);
+        }
 
         // apply the update to the same collection slot
 
