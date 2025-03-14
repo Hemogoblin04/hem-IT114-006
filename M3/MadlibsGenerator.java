@@ -67,7 +67,6 @@ public class MadLibsGenerator extends BaseClass {
             }
             lines.set(i, line);
         }
-
         // apply the update to the same collection slot
 
         // End edits
