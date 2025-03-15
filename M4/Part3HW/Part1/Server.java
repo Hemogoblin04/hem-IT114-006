@@ -1,4 +1,4 @@
-package M4.Part1;
+package M4.Part3HW.Part1;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,9 +28,8 @@ public class Server {
                     // sake
                     System.out.println("Client killed server");
                     break;
-                else if("/flip".equalsIgnoreCase(fromClient)){
+                }else if("/flip".equalsIgnoreCase(fromClient)){
                     System.out.print("Client flipped a coin and got" + flipCoin());
-                }
                 } else {
                     System.out.println("From client: " + fromClient);
                 }
@@ -44,7 +43,8 @@ public class Server {
     }
 
     private String flipCoin() {
-        return (Math.random() < 0.5) ? "Heads" : "Tails";
+        String results = (Math.random() < 0.5) ? "Heads" : "Tails";
+        return results;
     }
     
     public static void main(String[] args) {

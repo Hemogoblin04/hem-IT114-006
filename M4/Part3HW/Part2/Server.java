@@ -1,8 +1,9 @@
-package M4.Part1;
+package M4.Part2;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -16,23 +17,33 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(port);
                 // client wait
                 Socket client = serverSocket.accept(); // blocking;
-
+                // send to client
+                PrintWriter out = new PrintWriter(client.getOutputStream(), true);
                 // read from client
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));) {
 
             System.out.println("Client connected, waiting for message");
             String fromClient = "";
             while ((fromClient = in.readLine()) != null) {
+                System.out.println("From client: " + fromClient);
                 if ("/kill server".equalsIgnoreCase(fromClient)) {
                     // normally you wouldn't have a remote kill command, this is just for example
                     // sake
                     System.out.println("Client killed server");
                     break;
-                else if("/flip".equalsIgnoreCase(fromClient)){
-                    System.out.print("Client flipped a coin and got" + flipCoin());
-                }
+                } else if (fromClient.startsWith("/reverse")) {
+                    // another example of server-side command
+                    // Note: In the future command format processing will be client-side
+                    // then client will send just the necessary data to the server so the server
+                    // doesn't need to do as much string processing
+                    StringBuilder sb = new StringBuilder(fromClient.replace("/reverse ", ""));
+                    sb.reverse();
+                    String rev = sb.toString();
+                    System.out.println("To client: " + rev);
+                    out.println(rev);
                 } else {
-                    System.out.println("From client: " + fromClient);
+                    System.out.println("To client: " + fromClient);
+                    out.println(fromClient);
                 }
             }
         } catch (IOException e) {
@@ -43,10 +54,6 @@ public class Server {
         }
     }
 
-    private String flipCoin() {
-        return (Math.random() < 0.5) ? "Heads" : "Tails";
-    }
-    
     public static void main(String[] args) {
         System.out.println("Server Starting");
         Server server = new Server();
