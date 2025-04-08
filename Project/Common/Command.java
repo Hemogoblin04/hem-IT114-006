@@ -1,4 +1,4 @@
-package Project.Common;
+package M5.Part5;
 
 import java.util.HashMap;
 
@@ -12,10 +12,7 @@ public enum Command {
     LEAVE_ROOM("leaveroom"),
     JOIN_ROOM("joinroom"),
     NAME("name"),
-    LIST_USERS("users"),
-    LIST_ROOMS("listrooms"),
-    READY("ready"),
-    DO_SOMETHING("something"),;
+    LIST_USERS("users");
 
     private static final HashMap<String, Command> BY_COMMAND = new HashMap<>();
     static {
