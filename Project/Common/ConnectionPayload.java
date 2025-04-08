@@ -17,7 +17,6 @@ public class ConnectionPayload extends Payload {
         this.clientName = clientName;
     }
 
-    @Override
     public String toString() {
         return super.toString() +
                 String.format(" ClientName: [%s]",
