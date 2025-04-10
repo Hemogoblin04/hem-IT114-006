@@ -1,4 +1,4 @@
-package Project.Serverish;
+package Project.Server;
 
 import java.net.Socket;
 import java.util.Objects;

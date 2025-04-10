@@ -1,4 +1,4 @@
-package Project.Serverish;
+package Project.Server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
