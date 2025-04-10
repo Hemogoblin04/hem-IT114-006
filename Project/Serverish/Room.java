@@ -1,8 +1,12 @@
-package M5.Part5;
+package Project.Serverish;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import M5.Part5.TextFX.Color;
+import Project.Common.RoomAction;
+import Project.Common.TextFX;
+import Project.Common.TextFX.Color;
+import Project.Exceptions.DuplicateRoomException;
+import Project.Exceptions.RoomNotFoundException;
 
 public class Room implements AutoCloseable {
     private final String name;// unique name of the Room

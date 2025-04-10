@@ -1,9 +1,16 @@
-package M5.Part5;
+package Project.Serverish;
 
 import java.net.Socket;
 import java.util.Objects;
 import java.util.function.Consumer;
-import M5.Part5.TextFX.Color;
+
+import Project.Common.ConnectionPayload;
+import Project.Common.Constants;
+import Project.Common.Payload;
+import Project.Common.PayloadType;
+import Project.Common.RoomAction;
+import Project.Common.TextFX;
+import Project.Common.TextFX.Color;
 
 /**
  * A server-side representation of a single client
@@ -130,7 +137,7 @@ public class ServerThread extends BaseServerThread {
         switch (incoming.getPayloadType()) {
             case CLIENT_CONNECT:
                 setClientName(((ConnectionPayload) incoming).getClientName().trim());
-               
+
                 break;
             case DISCONNECT:
                 currentRoom.handleDisconnect(this);
