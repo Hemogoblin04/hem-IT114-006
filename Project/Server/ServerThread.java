@@ -1,9 +1,5 @@
 package Project.Server;
 
-import java.net.Socket;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
 import Project.Common.Payload;
@@ -11,6 +7,9 @@ import Project.Common.PayloadType;
 import Project.Common.RoomAction;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
+import java.net.Socket;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A server-side representation of a single client
@@ -102,12 +101,6 @@ public class ServerThread extends BaseServerThread {
         return sendToClient(payload);
     }
 
-    /**
-     * Sends this client's id to the client.
-     * This will be a successfully connection handshake
-     * 
-     * @return true for successful send
-     */
     protected boolean sendClientId() {
         ConnectionPayload payload = new ConnectionPayload();
         payload.setPayloadType(PayloadType.CLIENT_ID);

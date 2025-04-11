@@ -81,23 +81,7 @@ public enum Client {
         return isConnected();
     }
 
-    /**
-     * <p>
-     * Check if the string contains the <i>connect</i> command
-     * followed by an IP address and port or localhost and port.
-     * </p>
-     * <p>
-     * Example format: 123.123.123.123:3000
-     * </p>
-     * <p>
-     * Example format: localhost:3000
-     * </p>
-     * https://www.w3schools.com/java/java_regex.asp
-     * 
-     * @param text
-     * @return true if the text is a valid connection command
-     */
-    private boolean isConnection(String text) {
+  private boolean isConnection(String text) {
         Matcher ipMatcher = ipAddressPattern.matcher(text);
         Matcher localhostMatcher = localhostPattern.matcher(text);
         return ipMatcher.matches() || localhostMatcher.matches();
