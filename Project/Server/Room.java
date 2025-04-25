@@ -2,6 +2,7 @@ package Project.Server;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import Project.Common.LoggerUtil;
 import Project.Common.RoomAction;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
@@ -16,7 +17,7 @@ public class Room implements AutoCloseable {
     public final static String LOBBY = "lobby";
 
     private void info(String message) {
-        System.out.println(TextFX.colorize(String.format("Room[%s]: %s", name, message), Color.PURPLE));
+        LoggerUtil.INSTANCE.info(TextFX.colorize(String.format("Room[%s]: %s", name, message), Color.PURPLE));
     }
 
     public Room(String name) {
@@ -69,7 +70,7 @@ public class Room implements AutoCloseable {
                 boolean failedToSync = !incomingClient.sendClientInfo(serverThread.getClientId(),
                         serverThread.getClientName(), RoomAction.JOIN, true);
                 if (failedToSync) {
-                    System.out.println(
+                    LoggerUtil.INSTANCE.warning(
                             String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
                     disconnect(serverThread);
                 }
@@ -90,7 +91,7 @@ public class Room implements AutoCloseable {
             // Send the server generated message to the current client
             boolean failedToSend = !serverThread.sendMessage(formattedMessage);
             if (failedToSend || failedToSync) {
-                System.out.println(
+                LoggerUtil.INSTANCE.warning(
                         String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
                 disconnect(serverThread);
             }
@@ -132,7 +133,7 @@ public class Room implements AutoCloseable {
         clientsInRoom.values().removeIf(serverThread -> {
             boolean failedToSend = !serverThread.sendMessage(formattedMessage);
             if (failedToSend) {
-                System.out.println(
+                LoggerUtil.INSTANCE.warning(
                         String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
                 disconnect(serverThread);
             }
@@ -162,7 +163,7 @@ public class Room implements AutoCloseable {
                 boolean failedToSend = !serverThread.sendClientInfo(disconnectingServerThread.getClientId(),
                         disconnectingServerThread.getClientName(), RoomAction.LEAVE);
                 if (failedToSend) {
-                    System.out.println(
+                    LoggerUtil.INSTANCE.warning(
                             String.format("Removing disconnected %s from list", serverThread.getDisplayName()));
                     disconnect(serverThread);
                 }
@@ -218,6 +219,10 @@ public class Room implements AutoCloseable {
     }
 
     // start handle methods
+    protected void handleListRooms(ServerThread sender, String roomQuery) {
+        sender.sendRooms(Server.INSTANCE.listRooms(roomQuery));
+    }
+
     public void handleCreateRoom(ServerThread sender, String roomName) {
         try {
             Server.INSTANCE.createRoom(roomName);

@@ -1,7 +1,7 @@
 package Project.Server;
 
 import Project.Common.Phase;
-import Project.Common.User;
+import Project.Client.User;
 
 public class ServerUser extends User {
     private ServerThread client;
