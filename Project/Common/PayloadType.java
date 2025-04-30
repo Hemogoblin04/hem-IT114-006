@@ -27,5 +27,7 @@ public enum PayloadType {
        SYNC_TURN,
 
        REST_TURN,
+
+       POINTS,
        
 }

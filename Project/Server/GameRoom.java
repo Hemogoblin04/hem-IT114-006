@@ -7,7 +7,11 @@ import Project.Common.TimedEvent;
 import Project.Exceptions.NotReadyException;
 import Project.Exceptions.PhaseMismatchException;
 import Project.Exceptions.PlayerNotFoundException;
+import Project.Client.User;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 public class GameRoom extends BaseGameRoom {
 
     // used for general rounds (usually phase-based turns)
@@ -17,6 +21,11 @@ public class GameRoom extends BaseGameRoom {
     private TimedEvent turnTimer = null;
 
     private int round = 0;
+
+    private Map<Long, String> playerChoices = new HashMap<>();
+    private Map<Long, Integer> playerPoints = new HashMap<>();
+    private Map<Long, Boolean> playerEliminated = new HashMap<>();
+
     public GameRoom(String name) {
         super(name);
     }
@@ -86,12 +95,12 @@ public class GameRoom extends BaseGameRoom {
     @Override
     protected void onRoundStart() {
         LoggerUtil.INSTANCE.info("onRoundStart() start");
+        round++;
+        // relay(null, String.format("Round %d has started", round));
         resetRoundTimer();
         resetTurnStatus();
-        round++;
-        relay(null, String.format("Round %d has started", round));
-        startRoundTimer();
         LoggerUtil.INSTANCE.info("onRoundStart() end");
+        onTurnStart();
     }
 
     /** {@inheritDoc} */
@@ -121,6 +130,8 @@ public class GameRoom extends BaseGameRoom {
     protected void onRoundEnd() {
         LoggerUtil.INSTANCE.info("onRoundEnd() start");
         resetRoundTimer(); // reset timer if round ended without the time expiring
+
+      round();
 
         LoggerUtil.INSTANCE.info("onRoundEnd() end");
         if (round >= 3) {
@@ -214,14 +225,29 @@ public class GameRoom extends BaseGameRoom {
             checkPlayerInRoom(currentUser);
             checkCurrentPhase(currentUser, Phase.IN_PROGRESS);
             checkIsReady(currentUser);
+
             if (currentUser.didTakeTurn()) {
                 currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have already taken your turn this round");
                 return;
             }
-            currentUser.setTookTurn(true);
-            // TODO handle example text possibly or other turn related intention from client
-            sendTurnStatus(currentUser, currentUser.didTakeTurn());
-            checkAllTookTurn();
+        
+        String Move = exampleText.trim().toLowerCase(); 
+        if (!isValidMove(Move)) {
+            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid move. Please choose r, p, or s.");
+            return;
+        }
+
+        savePlayerMove(currentUser, Move);
+        
+
+        // Mark the player as having taken their turn
+        currentUser.setTookTurn(true);
+
+        // Send turn status
+        sendTurnStatus(currentUser, currentUser.didTakeTurn());
+
+        // Check if all players have taken their turn
+        checkAllTookTurn();
         }
         catch(NotReadyException e){
             // The check method already informs the currentUser
@@ -239,5 +265,65 @@ public class GameRoom extends BaseGameRoom {
         }
     }
 
-    // end receive data from ServerThread (GameRoom specific)
+//Methods added by me 
+private Map<ServerThread, String> playerMoves = new HashMap<>();
+
+//Helper method to validate the RPS move
+private boolean isValidMove(String move) {
+    return move.equals("r") || move.equals("p") || move.equals("s");
+}
+//save moves taken to hasmhmap
+private void savePlayerMove(ServerThread user, String move) {
+    playerMoves.put(user, move);
+}
+
+//revamped design after much hassle, lots of advice and genuine heartbreak HEM 
+protected void round() {
+
+    try {
+        relay( null,  "Round Start!");
+        ArrayList<ServerThread> Clients = new ArrayList<>(
+            clientsInRoom.values().stream()
+                .filter(sp -> !sp.getEliminated() && sp.isReady())
+                .toList()
+        );
+
+        for (int i = 0; i < Clients.size(); i++) {
+            String choiceOne = playerMoves.get(Clients.get(i));
+            String choiceTwo = playerMoves.get(Clients.get((i + 1) % Clients.size()));
+
+
+            if (choiceOne.equals(choiceTwo)) {
+                relay(null, String.format("%s has tied with %s using %s",
+                    Clients.get(i).getDisplayName(),
+                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
+                    choiceOne));
+            } else if (
+                (choiceOne.equalsIgnoreCase("r") && choiceTwo.equals("s")) ||
+                (choiceOne.equalsIgnoreCase("p") && choiceTwo.equals("r")) ||
+                (choiceOne.equalsIgnoreCase("s") && choiceTwo.equals("p"))
+            ) {
+                relay(null, String.format("%s has beaten %s using %s",
+                    Clients.get(i).getDisplayName(),
+                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
+                    choiceOne));
+                relay(null, String.format("%s has been eliminated",
+                    Clients.get((i + 1) % Clients.size()).getDisplayName()));
+                Clients.get(i).changePoints();
+                Clients.get((i + 1) % Clients.size()).setEliminated(true);
+            } else {
+                relay(null, String.format("%s has beaten %s using %s",
+                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
+                    Clients.get(i).getDisplayName(),
+                    choiceTwo));
+                Clients.get(i).setEliminated(true);
+                relay(null, String.format("%s has been eliminated",
+                    Clients.get(i).getDisplayName()));
+            }
+        }
+    } catch (Exception e) {
+        LoggerUtil.INSTANCE.severe("Error", e);
+    }
+}
+// end receive data from ServerThread (GameRoom specific)
 }

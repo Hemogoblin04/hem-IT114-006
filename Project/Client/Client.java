@@ -1,17 +1,5 @@
 package Project.Client;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import Project.Common.Command;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
@@ -24,6 +12,17 @@ import Project.Common.RoomAction;
 import Project.Common.RoomResultPayload;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Demoing bi-directional communication between client and server in a
@@ -211,8 +210,9 @@ public enum Client {
             } else if (text.equalsIgnoreCase(Command.READY.command)) {
                 sendReady();
                 wasCommand = true;
-            } else if (text.startsWith(Command.DO_SOMETHING.command)) {
-                text = text.replace(Command.DO_SOMETHING.command, "").trim();
+            } else if (text.toLowerCase().startsWith(Command.PICK.command)) {
+                String move = text.substring(Command.PICK.command.length()).trim();
+                sendPlayCommand(move);
 
                 sendDoTurn(text);
                 wasCommand = true;
@@ -243,6 +243,15 @@ public enum Client {
         rp.setReady(true); // <- techically not needed as we'll use the payload type as a trigger
         sendToServer(rp);
     }
+    
+    private void sendPlayCommand(String move) throws IOException {
+        ReadyPayload rp = new ReadyPayload();
+        rp.setPayloadType(PayloadType.TURN); 
+        rp.setMessage(move.trim().toLowerCase()); 
+        sendToServer(rp);
+    }
+    
+    
 
     /**
      * Sends a room action to the server

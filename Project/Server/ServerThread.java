@@ -1,22 +1,22 @@
 package Project.Server;
 
-import java.net.Socket;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
-
+import Project.Client.User;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.Phase;
+import Project.Common.PointsPayload;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomAction;
 import Project.Common.RoomResultPayload;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
-import Project.Client.User;
+import java.net.Socket;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 
 /**
@@ -253,7 +253,6 @@ public class ServerThread extends BaseServerThread {
                 break;
         }
     }
-
     // limited user data exposer
     protected boolean isReady() {
         return this.user.isReady();
@@ -275,5 +274,32 @@ public class ServerThread extends BaseServerThread {
     protected void onInitialized() {
         // once receiving the desired client name the object is ready
         onInitializationComplete.accept(this);
+    }
+
+    private boolean isEliminated = false;
+    private String choice;
+    private int points = 0;
+
+    public boolean getEliminated(){
+        return isEliminated;
+    }
+
+    public void setEliminated(boolean placeholder){
+        this.isEliminated = isEliminated;
+    }
+
+    public String getChoice(){
+        return choice;
+    }
+
+    public void setChoice(String choice){
+        this.choice = choice;
+    }
+
+    public void changePoints() {
+        this.points += points;
+        if (this.points < 0) {
+            this.points = 0;
+        }
     }
 }

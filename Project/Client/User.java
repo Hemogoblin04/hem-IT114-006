@@ -6,6 +6,31 @@ public class User {
     private String clientName;
     private boolean isReady = false;
     private boolean tookTurn = false;
+    private int points = 0;
+    /**
+     * @return the points
+     */
+    public int getPoints() {
+        return points;
+    }
+
+    /**
+     * @param points the points to apply (positive or negative)
+     * 
+     */
+    public void changePoints(int points) {
+        this.points += points;
+        if (this.points < 0) {
+            this.points = 0;
+        }
+    }
+
+    /**
+     * @param points the points to set
+     */
+    public void setPoints(int points) {
+        this.points = points;
+    }
 
     /**
      * @return the clientId
