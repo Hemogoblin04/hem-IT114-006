@@ -3,6 +3,7 @@ package Project.Server;
 import Project.Common.Constants;
 import Project.Common.LoggerUtil;
 import Project.Common.Phase;
+import Project.Common.PointsPayload;
 import Project.Common.TimedEvent;
 import Project.Exceptions.NotReadyException;
 import Project.Exceptions.PhaseMismatchException;
@@ -22,7 +23,7 @@ public class GameRoom extends BaseGameRoom {
 
     private int round = 0;
 
-    private Map<Long, String> playerChoices = new HashMap<>();
+    private Map<ServerThread, String> playerChoices = new HashMap<>();
     private Map<Long, Integer> playerPoints = new HashMap<>();
     private Map<Long, Boolean> playerEliminated = new HashMap<>();
 
@@ -146,6 +147,7 @@ public class GameRoom extends BaseGameRoom {
     @Override
     protected void onSessionEnd() {
         LoggerUtil.INSTANCE.info("onSessionEnd() start");
+        leaderBoard();
         resetReadyStatus();
         resetTurnStatus();
         changePhase(Phase.READY);
@@ -266,16 +268,33 @@ public class GameRoom extends BaseGameRoom {
     }
 
 //Methods added by me 
-private Map<ServerThread, String> playerMoves = new HashMap<>();
-
+//sure
 //Helper method to validate the RPS move
 private boolean isValidMove(String move) {
+    if (move == null) return false;  
+     move = move.trim().toLowerCase();
     return move.equals("r") || move.equals("p") || move.equals("s");
 }
 //save moves taken to hasmhmap
 private void savePlayerMove(ServerThread user, String move) {
-    playerMoves.put(user, move);
+    playerChoices.put(user, move);
 }
+
+//actual use of points payload to allow a client to know there points at the end of the round
+protected void syncPoints(ServerThread p){
+    p.sendPoints(p.getPoints());
+}
+
+
+//Scoreboard method to braodcast results at the end of a session
+private void leaderBoard() {
+    StringBuilder sb = new StringBuilder("Current Scores:\n");
+    for (ServerThread user : clientsInRoom.values()) {
+        sb.append(String.format("%s: %d points\n", user.getDisplayName(), user.getPoints()));
+    }
+    relay(null, sb.toString());
+}
+
 
 //revamped design after much hassle, lots of advice and genuine heartbreak HEM 
 protected void round() {
@@ -288,37 +307,30 @@ protected void round() {
                 .toList()
         );
 
-        for (int i = 0; i < Clients.size(); i++) {
-            String choiceOne = playerMoves.get(Clients.get(i));
-            String choiceTwo = playerMoves.get(Clients.get((i + 1) % Clients.size()));
-
-
+        for (int i = 0; i < Clients.size(); i += 2) {
+            if (i + 1 >= Clients.size()) break; // skip if there's an unmatched player
+        
+            ServerThread p1 = Clients.get(i);
+            ServerThread p2 = Clients.get(i + 1);
+            String choiceOne = playerChoices.get(p1);
+            String choiceTwo = playerChoices.get(p2);
+        
             if (choiceOne.equals(choiceTwo)) {
-                relay(null, String.format("%s has tied with %s using %s",
-                    Clients.get(i).getDisplayName(),
-                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
-                    choiceOne));
+                relay(null, String.format("%s has tied with %s using %s", p1.getDisplayName(), p2.getDisplayName(), choiceOne));
             } else if (
                 (choiceOne.equalsIgnoreCase("r") && choiceTwo.equals("s")) ||
                 (choiceOne.equalsIgnoreCase("p") && choiceTwo.equals("r")) ||
                 (choiceOne.equalsIgnoreCase("s") && choiceTwo.equals("p"))
             ) {
-                relay(null, String.format("%s has beaten %s using %s",
-                    Clients.get(i).getDisplayName(),
-                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
-                    choiceOne));
-                relay(null, String.format("%s has been eliminated",
-                    Clients.get((i + 1) % Clients.size()).getDisplayName()));
-                Clients.get(i).changePoints();
-                Clients.get((i + 1) % Clients.size()).setEliminated(true);
+                relay(null, String.format("%s has beaten %s using %s", p1.getDisplayName(), p2.getDisplayName(), choiceOne));
+                p1.changePoints();
+                p2.setEliminated(true);
+                relay(null, String.format("%s has been eliminated", p2.getDisplayName()));
             } else {
-                relay(null, String.format("%s has beaten %s using %s",
-                    Clients.get((i + 1) % Clients.size()).getDisplayName(),
-                    Clients.get(i).getDisplayName(),
-                    choiceTwo));
-                Clients.get(i).setEliminated(true);
-                relay(null, String.format("%s has been eliminated",
-                    Clients.get(i).getDisplayName()));
+                relay(null, String.format("%s has beaten %s using %s", p2.getDisplayName(), p1.getDisplayName(), choiceTwo));
+                p2.changePoints();
+                p1.setEliminated(true);
+                relay(null, String.format("%s has been eliminated", p1.getDisplayName()));
             }
         }
     } catch (Exception e) {

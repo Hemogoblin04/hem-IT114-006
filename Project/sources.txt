@@ -3,6 +3,7 @@
 ./Common/Command.java
 ./Common/ConnectionPayload.java
 ./Common/Constants.java
+./Common/ElimPayload.java
 ./Common/LoggerUtil.java
 ./Common/Payload.java
 ./Common/PayloadType.java

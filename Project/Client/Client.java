@@ -211,9 +211,13 @@ public enum Client {
                 sendReady();
                 wasCommand = true;
             } else if (text.toLowerCase().startsWith(Command.PICK.command)) {
+                if (myUser.getEliminated()) {
+                    LoggerUtil.INSTANCE.warning(TextFX.colorize("You have been eliminated and cannot make a move.", Color.RED));
+                    return true;
+                }
+            
                 String move = text.substring(Command.PICK.command.length()).trim();
                 sendPlayCommand(move);
-
                 sendDoTurn(text);
                 wasCommand = true;
             }

@@ -3,11 +3,13 @@ package Project.Server;
 import Project.Client.User;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.ElimPayload;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.Phase;
 import Project.Common.PointsPayload;
+import Project.Common.ElimPayload;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomAction;
 import Project.Common.RoomResultPayload;
@@ -280,6 +282,7 @@ public class ServerThread extends BaseServerThread {
     private String choice;
     private int points = 0;
 
+ 
     public boolean getEliminated(){
         return isEliminated;
     }
@@ -294,6 +297,20 @@ public class ServerThread extends BaseServerThread {
 
     public void setChoice(String choice){
         this.choice = choice;
+    }
+
+    public boolean sendPoints(int points) {
+        PointsPayload p = new PointsPayload();
+        p.setPoints(points);
+        return sendToClient(p);
+    }
+
+    public int getPoints(){
+        return points;
+    }
+
+    public void setPoints(int p){
+        this.user.setPoints(p);
     }
 
     public void changePoints() {

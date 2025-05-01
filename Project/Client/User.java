@@ -1,12 +1,15 @@
 package Project.Client;
 
 import Project.Common.Constants;
+import Project.Common.PointsPayload;
 public class User {
     private long clientId = Constants.DEFAULT_CLIENT_ID;
     private String clientName;
     private boolean isReady = false;
     private boolean tookTurn = false;
     private int points = 0;
+    private boolean isEliminated = false;
+    private String choice; 
     /**
      * @return the points
      */
@@ -90,5 +93,32 @@ public class User {
      */
     public void setTookTurn(boolean tookTurn) {
         this.tookTurn = tookTurn;
+    }
+    public boolean getEliminated(){
+        return isEliminated;
+    }
+
+    public void setEliminated(boolean placeholder){
+        this.isEliminated = isEliminated;
+    }
+
+    public String getChoice(){
+        return choice;
+    }
+
+    public void setChoice(String choice){
+        this.choice = choice;
+    }
+
+
+    public void changePoints() {
+        this.points += points;
+        if (this.points < 0) {
+            this.points = 0;
+        }
+    }
+
+    boolean gettEliminated() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
