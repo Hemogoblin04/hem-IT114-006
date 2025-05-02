@@ -8,6 +8,7 @@ import Project.Common.TimedEvent;
 import Project.Exceptions.NotReadyException;
 import Project.Exceptions.PhaseMismatchException;
 import Project.Exceptions.PlayerNotFoundException;
+import Project.Client.Client;
 import Project.Client.User;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ public class GameRoom extends BaseGameRoom {
     private int round = 0;
 
     private Map<ServerThread, String> playerChoices = new HashMap<>();
-    private Map<Long, Integer> playerPoints = new HashMap<>();
     private Map<Long, Boolean> playerEliminated = new HashMap<>();
 
     public GameRoom(String name) {
@@ -133,6 +133,7 @@ public class GameRoom extends BaseGameRoom {
         resetRoundTimer(); // reset timer if round ended without the time expiring
 
       round();
+      playerChoices.clear();
 
         LoggerUtil.INSTANCE.info("onRoundEnd() end");
         if (round >= 3) {
@@ -148,6 +149,9 @@ public class GameRoom extends BaseGameRoom {
     protected void onSessionEnd() {
         LoggerUtil.INSTANCE.info("onSessionEnd() start");
         leaderBoard();
+        
+        clientsInRoom.values().forEach(this::syncPoints);
+
         resetReadyStatus();
         resetTurnStatus();
         changePhase(Phase.READY);
@@ -189,9 +193,9 @@ public class GameRoom extends BaseGameRoom {
         });
     }
 
-    // end send data to ServerThread(s)
+    //end send data to ServerThread(s)
 
-    // misc methods
+    //misc methods
     private void resetTurnStatus() {
         clientsInRoom.values().forEach(sp -> {
             sp.setTookTurn(false);
@@ -216,11 +220,6 @@ public class GameRoom extends BaseGameRoom {
 
     // receive data from ServerThread (GameRoom specific)
 
-    /**
-     * Example turn action
-     * 
-     * @param currentUser
-     */
     protected void handleTurnAction(ServerThread currentUser, String exampleText) {
         // check if the client is in the room
         try {
@@ -267,6 +266,7 @@ public class GameRoom extends BaseGameRoom {
         }
     }
 
+
 //Methods added by me 
 //sure
 //Helper method to validate the RPS move
@@ -275,16 +275,15 @@ private boolean isValidMove(String move) {
      move = move.trim().toLowerCase();
     return move.equals("r") || move.equals("p") || move.equals("s");
 }
-//save moves taken to hasmhmap
-private void savePlayerMove(ServerThread user, String move) {
-    playerChoices.put(user, move);
-}
 
 //actual use of points payload to allow a client to know there points at the end of the round
 protected void syncPoints(ServerThread p){
     p.sendPoints(p.getPoints());
 }
-
+//saves player moves
+private void savePlayerMove(ServerThread currentUser, String move) {
+    playerChoices.put(currentUser, move);
+}
 
 //Scoreboard method to braodcast results at the end of a session
 private void leaderBoard() {
@@ -298,9 +297,8 @@ private void leaderBoard() {
 
 //revamped design after much hassle, lots of advice and genuine heartbreak HEM 
 protected void round() {
-
     try {
-        relay( null,  "Round Start!");
+        relay(null, "Round Start!");
         ArrayList<ServerThread> Clients = new ArrayList<>(
             clientsInRoom.values().stream()
                 .filter(sp -> !sp.getEliminated() && sp.isReady())
@@ -308,34 +306,53 @@ protected void round() {
         );
 
         for (int i = 0; i < Clients.size(); i += 2) {
-            if (i + 1 >= Clients.size()) break; // skip if there's an unmatched player
-        
+            if (i + 1 >= Clients.size()) {
+                relay(null, String.format("%s had no opponent this round", Clients.get(i).getDisplayName()));
+                continue;
+            }
+
             ServerThread p1 = Clients.get(i);
             ServerThread p2 = Clients.get(i + 1);
+
             String choiceOne = playerChoices.get(p1);
             String choiceTwo = playerChoices.get(p2);
-        
-            if (choiceOne.equals(choiceTwo)) {
-                relay(null, String.format("%s has tied with %s using %s", p1.getDisplayName(), p2.getDisplayName(), choiceOne));
+
+            if (choiceOne == null || choiceTwo == null) {
+                relay(null, String.format("One or both players did not submit a move: %s (%s), %s (%s)",
+                    p1.getDisplayName(), choiceOne,
+                    p2.getDisplayName(), choiceTwo
+                ));
+                continue;
+            }
+
+            if (choiceOne.equalsIgnoreCase(choiceTwo)) {
+                relay(null, String.format("%s tied with %s using %s",
+                    p1.getDisplayName(), p2.getDisplayName(), choiceOne));
             } else if (
-                (choiceOne.equalsIgnoreCase("r") && choiceTwo.equals("s")) ||
-                (choiceOne.equalsIgnoreCase("p") && choiceTwo.equals("r")) ||
-                (choiceOne.equalsIgnoreCase("s") && choiceTwo.equals("p"))
+                (choiceOne.equalsIgnoreCase("r") && choiceTwo.equalsIgnoreCase("s")) ||
+                (choiceOne.equalsIgnoreCase("p") && choiceTwo.equalsIgnoreCase("r")) ||
+                (choiceOne.equalsIgnoreCase("s") && choiceTwo.equalsIgnoreCase("p"))
             ) {
-                relay(null, String.format("%s has beaten %s using %s", p1.getDisplayName(), p2.getDisplayName(), choiceOne));
+                relay(null, String.format("%s beat %s using %s",
+                    p1.getDisplayName(), p2.getDisplayName(), choiceOne));
                 p1.changePoints();
                 p2.setEliminated(true);
                 relay(null, String.format("%s has been eliminated", p2.getDisplayName()));
+                syncPoints(p1);
+                syncPoints(p2);
             } else {
-                relay(null, String.format("%s has beaten %s using %s", p2.getDisplayName(), p1.getDisplayName(), choiceTwo));
+                relay(null, String.format("%s beat %s using %s",
+                    p2.getDisplayName(), p1.getDisplayName(), choiceTwo));
                 p2.changePoints();
                 p1.setEliminated(true);
                 relay(null, String.format("%s has been eliminated", p1.getDisplayName()));
+                syncPoints(p1);
+                syncPoints(p2);
             }
         }
+
     } catch (Exception e) {
-        LoggerUtil.INSTANCE.severe("Error", e);
+        LoggerUtil.INSTANCE.severe("Error in round()", e);
     }
 }
-// end receive data from ServerThread (GameRoom specific)
 }

@@ -203,6 +203,7 @@ public class ServerThread extends BaseServerThread {
     }
 
     // End Send*() Methods
+    public String move;
     @Override
     protected void processPayload(Payload incoming) {
 
@@ -255,6 +256,7 @@ public class ServerThread extends BaseServerThread {
                 break;
         }
     }
+    
     // limited user data exposer
     protected boolean isReady() {
         return this.user.isReady();
@@ -314,7 +316,7 @@ public class ServerThread extends BaseServerThread {
     }
 
     public void changePoints() {
-        this.points += points;
+        this.points += 1;
         if (this.points < 0) {
             this.points = 0;
         }

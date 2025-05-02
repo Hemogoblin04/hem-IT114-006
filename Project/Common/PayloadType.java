@@ -29,5 +29,7 @@ public enum PayloadType {
        REST_TURN,
 
        POINTS,
+
+       PICK,
        
 }
