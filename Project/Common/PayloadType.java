@@ -31,5 +31,7 @@ public enum PayloadType {
        POINTS,
 
        PICK,
+
+       TIME,
        
 }

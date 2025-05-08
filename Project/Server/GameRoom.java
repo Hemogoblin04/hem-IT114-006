@@ -107,6 +107,9 @@ public class GameRoom extends BaseGameRoom {
     /** {@inheritDoc} */
     @Override
     protected void onTurnStart() {
+
+        playerChoices.clear();
+
         LoggerUtil.INSTANCE.info("onTurnStart() start");
         resetTurnTimer();
         startTurnTimer();
@@ -132,16 +135,20 @@ public class GameRoom extends BaseGameRoom {
         LoggerUtil.INSTANCE.info("onRoundEnd() start");
         resetRoundTimer(); // reset timer if round ended without the time expiring
 
-      round();
-      playerChoices.clear();
+        round();
+        playerChoices.clear();
+        resetTurnStatus();
 
-        LoggerUtil.INSTANCE.info("onRoundEnd() end");
-        if (round >= 3) {
-            onSessionEnd();
-        }
-        else{
-            onRoundStart();
-        }
+        long remainingPlayers = clientsInRoom.values().stream()
+        .filter(p -> p.isReady() && !p.getEliminated())
+        .count();
+        
+       if (remainingPlayers == 0){
+        onSessionEnd();
+       } else {
+        onRoundStart();
+       }
+
     }
 
     /** {@inheritDoc} */

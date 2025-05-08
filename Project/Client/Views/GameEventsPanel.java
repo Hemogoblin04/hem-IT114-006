@@ -1,12 +1,19 @@
 package Project.Client.Views;
 
+import Project.Client.Client;
+import Project.Client.Interfaces.IMessageEvents;
+import Project.Client.Interfaces.IPhaseEvent;
+import Project.Client.Interfaces.IReadyEvent;
+import Project.Client.Interfaces.ITimeEvents;
+import Project.Common.Constants;
+import Project.Common.Phase;
+import Project.Common.TimerType;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JEditorPane;
@@ -16,15 +23,6 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
-
-import Project.Client.Client;
-import Project.Client.Interfaces.IMessageEvents;
-import Project.Client.Interfaces.IPhaseEvent;
-import Project.Client.Interfaces.IReadyEvent;
-import Project.Client.Interfaces.ITimeEvents;
-import Project.Common.Constants;
-import Project.Common.Phase;
-import Project.Common.TimerType;
 
 public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent, IMessageEvents, ITimeEvents {
     private JPanel content;
@@ -65,7 +63,7 @@ public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent,
 
         timerText = new JLabel();
         this.add(timerText, BorderLayout.NORTH);
-        timerText.setVisible(false);
+        timerText.setVisible(true);
         Client.INSTANCE.addCallback(this);
     }
 
