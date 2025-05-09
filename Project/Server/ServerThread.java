@@ -277,6 +277,20 @@ public class ServerThread extends BaseServerThread {
                     sendMessage(Constants.DEFAULT_CLIENT_ID, "You must be in a GameRoom to do a turn");
                 }
                 break;
+                case MODE:
+                String message = incoming.getMessage().trim();
+                if (message.startsWith("/mode ")) {
+                    try {
+                        ((GameRoom) currentRoom).handleGameModeChange(this, 
+                            message.substring(6).trim());
+                    } catch (Exception e) {
+                        sendMessage(Constants.DEFAULT_CLIENT_ID, 
+                            "You must be in a GameRoom to change mode");
+                    }
+                } else {
+                    currentRoom.handleMessage(this, message);
+                }
+                break;
         }
     }
     

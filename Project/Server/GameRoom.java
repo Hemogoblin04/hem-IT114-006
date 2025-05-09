@@ -1,16 +1,13 @@
 package Project.Server;
 
 import Project.Common.Constants;
+import Project.Common.Gamemode.GameMode;
 import Project.Common.LoggerUtil;
 import Project.Common.Phase;
-import Project.Common.PointsPayload;
 import Project.Common.TimedEvent;
 import Project.Exceptions.NotReadyException;
 import Project.Exceptions.PhaseMismatchException;
 import Project.Exceptions.PlayerNotFoundException;
-import Project.Client.Client;
-import Project.Client.User;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -217,6 +214,7 @@ public class GameRoom extends BaseGameRoom {
 
     // receive data from ServerThread (GameRoom specific)
 
+
     protected void handleTurnAction(ServerThread currentUser, String exampleText) {
         // check if the client is in the room
         if (currentUser.isAway()) {
@@ -237,7 +235,7 @@ public class GameRoom extends BaseGameRoom {
         
         String Move = exampleText.trim().toLowerCase(); 
         if (!isValidMove(Move)) {
-            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid move. Please choose r, p, or s.");
+            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "Invalid move. Please choose");
             return;
         }
 
@@ -277,12 +275,15 @@ public class GameRoom extends BaseGameRoom {
 
 //Methods added by me 
 //sure
-//Helper method to validate the RPS move
+//redone validation method to also check for RPS5
 private boolean isValidMove(String move) {
-    if (move == null) return false;  
-     move = move.trim().toLowerCase();
-    return move.equals("r") || move.equals("p") || move.equals("s");
-}
+        if (currentMode == GameMode.RPS3) {
+            return move.equals("rock") || move.equals("paper") || move.equals("scissors");
+        } else {
+            return move.equals("rock") || move.equals("paper") || move.equals("scissors") 
+                || move.equals("lizard") || move.equals("spock");
+        }
+    }
 
 //actual use of points payload to allow a client to know there points at the end of the round
 protected void syncPoints(ServerThread p){
@@ -302,6 +303,57 @@ private void leaderBoard() {
     relay(null, sb.toString());
 }
 
+    private GameMode currentGameMode = GameMode.RPS3; // default to RPS3
+    
+    // Add getter and setter
+    public GameMode getGameMode() {
+        return currentGameMode;
+    }
+    
+    public void setGameMode(GameMode mode) {
+        this.currentGameMode = mode;
+    }
+    
+    // Modify your handleMessage or add new method to process mode selection
+    public void handleGameModeChange(ServerThread user, String mode) {
+        try {
+            GameMode selectedMode = GameMode.valueOf(mode.toUpperCase());
+            this.currentGameMode = selectedMode;
+            user.sendMessage(Constants.DEFAULT_CLIENT_ID, 
+                String.format("Game mode changed to %s", selectedMode));
+        } catch (IllegalArgumentException e) {
+            user.sendMessage(Constants.DEFAULT_CLIENT_ID, 
+                "Invalid game mode. Use RPS3 or RPS5");
+        }
+    }
+
+public GameMode currentMode = GameMode.RPS3;
+
+//Seperated round logic to make it easeier to change and test
+private boolean determineWinner(String move1, String move2) {
+        if (currentMode == GameMode.RPS3) {
+            return (move1.equals("rock") && move2.equals("scissors")) ||
+                   (move1.equals("paper") && move2.equals("rock")) ||
+                   (move1.equals("scissors") && move2.equals("paper"));
+        } else {
+            return (move1.equals("rock") && (move2.equals("scissors") || move2.equals("lizard"))) ||
+                   (move1.equals("paper") && (move2.equals("rock") || move2.equals("spock"))) ||
+                   (move1.equals("scissors") && (move2.equals("paper") || move2.equals("lizard"))) ||
+                   (move1.equals("lizard") && (move2.equals("paper") || move2.equals("spock"))) ||
+                   (move1.equals("spock") && (move2.equals("rock") || move2.equals("scissors")));
+        }
+    }
+
+    //helper method to assign points
+    private void awardWin(ServerThread winner, ServerThread loser, String winningMove, String losingMove) {
+        winner.changePoints();
+        loser.setEliminated(true);
+        relay(null, String.format("%s's %s beats %s's %s", 
+            winner.getDisplayName(), winningMove,
+            loser.getDisplayName(), losingMove));
+        syncPoints(winner);
+        syncPoints(loser);
+    }
 
 //revamped design after much hassle, lots of advice and genuine heartbreak HEM 
 protected void round() {
@@ -312,6 +364,8 @@ protected void round() {
                 .filter(sp -> !sp.getEliminated() && sp.isReady())
                 .toList()
         );
+
+
 
         // Process all player pairs first
         for (int i = 0; i < Clients.size(); i += 2) {
@@ -334,32 +388,12 @@ protected void round() {
                 continue;
             }
 
-            if (choiceOne.equalsIgnoreCase(choiceTwo)) {
-                relay(null, String.format("%s tied with %s using %s",
-                    p1.getDisplayName(), p2.getDisplayName(), choiceOne));
-            } else if (
-                (choiceOne.equalsIgnoreCase("r") && choiceTwo.equalsIgnoreCase("s")) ||
-                (choiceOne.equalsIgnoreCase("p") && choiceTwo.equalsIgnoreCase("r")) ||
-                (choiceOne.equalsIgnoreCase("s") && choiceTwo.equalsIgnoreCase("p"))
-            ) {
-                relay(null, String.format("%s beat %s using %s",
-                    p1.getDisplayName(), p2.getDisplayName(), choiceOne));
-                p1.changePoints();
-                p2.setEliminated(true);
-                relay(null, String.format("%s has been eliminated", p2.getDisplayName()));
-                syncPoints(p1);
-                syncPoints(p2);
+        if (determineWinner(choiceOne, choiceTwo)) {
+                awardWin(p1, p2, choiceOne, choiceTwo);
             } else {
-                relay(null, String.format("%s beat %s using %s",
-                    p2.getDisplayName(), p1.getDisplayName(), choiceTwo));
-                p2.changePoints();
-                p1.setEliminated(true);
-                relay(null, String.format("%s has been eliminated", p1.getDisplayName()));
-                syncPoints(p1);
-                syncPoints(p2);
+            awardWin(p2, p1, choiceTwo, choiceOne);
             }
-        }
-
+    }
         // Moved this check outside the loop to process all pairs first
         long activePlayers = clientsInRoom.values().stream()
             .filter(sp -> sp.isReady() && !sp.getEliminated())

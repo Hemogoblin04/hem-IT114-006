@@ -32,23 +32,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
     public GamePanel(ICardControls controls) {
         super(new BorderLayout());
 
-        //Buttons I added
-        
-        buttonPanel = new JPanel(); // Use FlowLayout by default
-        String[] choices = { "Rock", "Paper", "Scissors" };
-        
-        for (String choice : choices) {
-            JButton rpsButton = new JButton(choice);
-            rpsButton.addActionListener(event -> {
-                try {
-                    // Send the first character only (R, P, or S)
-                    Client.INSTANCE.sendDoTurn(choice.substring(0, 1).toLowerCase());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            buttonPanel.add(rpsButton);
-        }
+        buildChoiceButtons();
 
         JButton awayButton = new JButton("Go Away");
         awayButton.addActionListener(event -> {
@@ -69,7 +53,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
         this.setName(CardView.GAME_SCREEN.name());
         Client.INSTANCE.addCallback(this);
 
-        ReadyPanel readyPanel = new ReadyPanel();
+        ReadyPanel readyPanel = new ReadyPanel(this::onModeChanged);
         readyPanel.setName(READY_PANEL);
         gameContainer.add(READY_PANEL, readyPanel);
 
@@ -101,6 +85,51 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
         controls.addPanel(CardView.CHAT_GAME_SCREEN.name(), this);
         setVisible(false);
     }
+
+private boolean extendedMode = false;
+
+private void onModeChanged(String mode) {
+    extendedMode = mode.equals("RPS5");
+    buildChoiceButtons();
+}
+
+
+private void buildChoiceButtons() {
+    buttonPanel.removeAll();
+
+    String[] choices = extendedMode
+        ? new String[] { "Rock", "Paper", "Scissors", "Lizard", "Spock" }
+        : new String[] { "Rock", "Paper", "Scissors" };
+
+    for (String choice : choices) {
+        JButton rpsButton = new JButton(choice);
+        rpsButton.addActionListener(event -> {
+            try {
+                Client.INSTANCE.sendDoTurn(choice.toLowerCase());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        buttonPanel.add(rpsButton);
+    }
+
+    JButton awayButton = new JButton("Go Away");
+    awayButton.addActionListener(event -> {
+        boolean goingAway = awayButton.getText().equals("Go Away");
+        awayButton.setText(goingAway ? "Back" : "Go Away");
+
+        try {
+            Client.INSTANCE.sendDoTurn(goingAway ? "/away" : "/back");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    });
+    buttonPanel.add(awayButton);
+
+    buttonPanel.revalidate();
+    buttonPanel.repaint();
+}
+
 
     @Override
     public void onRoomAction(long clientId, String roomName, boolean isJoin, boolean isQuiet) {

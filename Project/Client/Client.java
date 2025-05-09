@@ -307,10 +307,25 @@ public enum Client {
                 sendDoTurn(text);
                 wasCommand = true;
             }
+            else if (text.toLowerCase().startsWith(Command.MODE.command)) {
+                    String mode = text.substring(Command.MODE.command.length()).trim();
+                    
+                    if (mode.equalsIgnoreCase("RPS3") || mode.equalsIgnoreCase("RPS5")) {
+                        sendModeCommand(mode);
+                        LoggerUtil.INSTANCE.info(TextFX.colorize(
+                            "Game mode set to " + mode.toUpperCase(), Color.PURPLE));
+                    } else {
+                        LoggerUtil.INSTANCE.warning(TextFX.colorize(
+                            "Invalid game mode. Please use:\n" +
+                            "  /mode RPS3 - Classic Rock-Paper-Scissors\n" +
+                            "  /mode RPS5 - Rock-Paper-Scissors-Lizard-Spock", 
+                            Color.RED));
+                    }
+                    wasCommand = true;
+            }
         }
         return wasCommand;
-    }
-
+        }
     // Start Send*() methods
     public void sendDoTurn(String text) throws IOException {
         // NOTE for now using ReadyPayload as it has the necessary properties
@@ -338,6 +353,13 @@ public enum Client {
         ReadyPayload rp = new ReadyPayload();
         rp.setPayloadType(PayloadType.TURN); 
         rp.setMessage(move.trim().toLowerCase()); 
+        sendToServer(rp);
+    }
+
+    private void sendModeCommand(String mode) throws IOException {
+        ReadyPayload rp = new ReadyPayload();
+        rp.setPayloadType(PayloadType.MODE); 
+        rp.setMessage("/mode " + mode.trim().toLowerCase()); 
         sendToServer(rp);
     }
 
