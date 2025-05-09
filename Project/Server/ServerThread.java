@@ -15,6 +15,9 @@ import Project.Common.RoomAction;
 import Project.Common.RoomResultPayload;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
+import Project.Common.TimerPayload;
+import Project.Common.TimerType;
+
 import java.net.Socket;
 import java.util.List;
 import java.util.Objects;
@@ -202,8 +205,20 @@ public class ServerThread extends BaseServerThread {
         return sendToClient(payload);
     }
 
+        public boolean sendCurrentTime(TimerType timerType, int time) {
+        TimerPayload tp = new TimerPayload();
+        tp.setTime(time);
+        tp.setTimerType(timerType);
+        return sendToClient(tp);
+    }
+
     // End Send*() Methods
+    private boolean isAway = false;
+    public boolean isAway() {
+    return isAway;
+    }
     public String move;
+
     @Override
     protected void processPayload(Payload incoming) {
 
@@ -245,14 +260,22 @@ public class ServerThread extends BaseServerThread {
             case TURN:
                 // no data needed as the intent will be used as the trigger
                 try {
-                    // cast to GameRoom as the subclass will handle all Game logic
-                    ((GameRoom) currentRoom).handleTurnAction(this, incoming.getMessage());
+                    String message = incoming.getMessage().trim().toLowerCase();
+            
+                    if (message.equals("/away")) {
+                        isAway = true;
+                        sendMessage(Constants.DEFAULT_CLIENT_ID, "you're away, you cannot play");                        return;
+                    }
+            
+                    if (message.equals("/back")) {
+                        isAway = false;
+                        sendMessage(Constants.DEFAULT_CLIENT_ID, "Welcome back");                        return;
+                    }
+            
+                    ((GameRoom) currentRoom).handleTurnAction(this, message);
                 } catch (Exception e) {
                     sendMessage(Constants.DEFAULT_CLIENT_ID, "You must be in a GameRoom to do a turn");
                 }
-                break;
-            default:
-                LoggerUtil.INSTANCE.warning(TextFX.colorize("Unknown payload type received", Color.RED));
                 break;
         }
     }
@@ -284,12 +307,15 @@ public class ServerThread extends BaseServerThread {
     private String choice;
     private int points = 0;
 
- 
+    public boolean getAway(){
+        return isAway;
+    }
+
     public boolean getEliminated(){
         return isEliminated;
     }
 
-    public void setEliminated(boolean placeholder){
+    public void setEliminated(boolean isEliminated){
         this.isEliminated = isEliminated;
     }
 

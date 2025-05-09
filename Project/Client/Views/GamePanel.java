@@ -18,6 +18,7 @@ import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IRoomEvents;
 import Project.Common.Constants;
 import Project.Common.Phase;
+import Project.Server.ServerThread;
 
 public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
 
@@ -31,18 +32,38 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
     public GamePanel(ICardControls controls) {
         super(new BorderLayout());
 
-        // Create the buttons and add them to a panel
-        JButton doSomething = new JButton("Do Something");
-        doSomething.addActionListener(event -> {
-            try {
-                Client.INSTANCE.sendDoTurn("example");
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        });
-        buttonPanel.add(doSomething);
+        //Buttons I added
+        
+        buttonPanel = new JPanel(); // Use FlowLayout by default
+        String[] choices = { "Rock", "Paper", "Scissors" };
+        
+        for (String choice : choices) {
+            JButton rpsButton = new JButton(choice);
+            rpsButton.addActionListener(event -> {
+                try {
+                    // Send the first character only (R, P, or S)
+                    Client.INSTANCE.sendDoTurn(choice.substring(0, 1).toLowerCase());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            buttonPanel.add(rpsButton);
+        }
 
+        JButton awayButton = new JButton("Go Away");
+        awayButton.addActionListener(event -> {
+        boolean goingAway = awayButton.getText().equals("Go Away");
+        awayButton.setText(goingAway ? "Back" : "Go Away");
+
+        try {
+            Client.INSTANCE.sendDoTurn(goingAway ? "/away" : "/back");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        });
+        buttonPanel.add(awayButton);
+
+        
         JPanel gameContainer = new JPanel(new CardLayout());
         cardLayout = (CardLayout) gameContainer.getLayout();
         this.setName(CardView.GAME_SCREEN.name());

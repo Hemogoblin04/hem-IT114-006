@@ -139,16 +139,6 @@ public class GameRoom extends BaseGameRoom {
         playerChoices.clear();
         resetTurnStatus();
 
-        long remainingPlayers = clientsInRoom.values().stream()
-        .filter(p -> p.isReady() && !p.getEliminated())
-        .count();
-        
-       if (remainingPlayers == 0){
-        onSessionEnd();
-       } else {
-        onRoundStart();
-       }
-
     }
 
     /** {@inheritDoc} */
@@ -229,6 +219,12 @@ public class GameRoom extends BaseGameRoom {
 
     protected void handleTurnAction(ServerThread currentUser, String exampleText) {
         // check if the client is in the room
+        if (currentUser.isAway()) {
+            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You're marked as Away and cannot pick a move.");
+            return;
+        }
+        
+
         try {
             checkPlayerInRoom(currentUser);
             checkCurrentPhase(currentUser, Phase.IN_PROGRESS);
@@ -250,6 +246,11 @@ public class GameRoom extends BaseGameRoom {
 
         // Mark the player as having taken their turn
         currentUser.setTookTurn(true);
+
+        if (currentUser.getEliminated()) {
+            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have been eliminated and cannot play.");
+            return;
+        }        
 
         // Send turn status
         sendTurnStatus(currentUser, currentUser.didTakeTurn());
@@ -312,6 +313,7 @@ protected void round() {
                 .toList()
         );
 
+        // Process all player pairs first
         for (int i = 0; i < Clients.size(); i += 2) {
             if (i + 1 >= Clients.size()) {
                 relay(null, String.format("%s had no opponent this round", Clients.get(i).getDisplayName()));
@@ -356,6 +358,25 @@ protected void round() {
                 syncPoints(p1);
                 syncPoints(p2);
             }
+        }
+
+        // Moved this check outside the loop to process all pairs first
+        long activePlayers = clientsInRoom.values().stream()
+            .filter(sp -> sp.isReady() && !sp.getEliminated())
+            .count();
+
+        if (activePlayers <= 1) {
+            relay(null, "Game over!");
+            
+            // show the winner
+            clientsInRoom.values().stream()
+                .filter(sp -> sp.isReady() && !sp.getEliminated())
+                .findFirst()
+                .ifPresent(winner -> relay(null, winner.getDisplayName() + " is the winner!"));
+
+            onSessionEnd();
+        } else {
+            onRoundStart(); // continue the game
         }
 
     } catch (Exception e) {
