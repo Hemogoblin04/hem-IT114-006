@@ -33,20 +33,6 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
         super(new BorderLayout());
 
         buildChoiceButtons();
-
-        JButton awayButton = new JButton("Go Away");
-        awayButton.addActionListener(event -> {
-        boolean goingAway = awayButton.getText().equals("Go Away");
-        awayButton.setText(goingAway ? "Back" : "Go Away");
-
-        try {
-            Client.INSTANCE.sendDoTurn(goingAway ? "/away" : "/back");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        });
-        buttonPanel.add(awayButton);
-
         
         JPanel gameContainer = new JPanel(new CardLayout());
         cardLayout = (CardLayout) gameContainer.getLayout();
