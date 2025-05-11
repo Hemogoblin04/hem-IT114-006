@@ -234,6 +234,10 @@ public class ServerThread extends BaseServerThread {
                 currentRoom.handleDisconnect(this);
                 break;
             case MESSAGE:
+                if (this.isSpectator()) {
+                this.sendMessage(-1L, "Spectators cannot send messages");
+                return;
+    }
                 currentRoom.handleMessage(this, incoming.getMessage());
                 break;
             case REVERSE:
@@ -244,7 +248,7 @@ public class ServerThread extends BaseServerThread {
                 break;
             case ROOM_JOIN:
             ConnectionPayload cp = (ConnectionPayload) incoming;
-            boolean spectator = cp.isSpectator(); 
+            boolean IsSpectator = cp.isSpectator(); 
     
             currentRoom.handleJoinRoom(this, cp);
             break;

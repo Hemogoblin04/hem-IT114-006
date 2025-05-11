@@ -102,14 +102,12 @@ private void buildChoiceButtons() {
 
     JButton awayButton = new JButton("Go Away");
     awayButton.addActionListener(event -> {
-        isAway = !isAway; // Toggle state first
+        isAway = !isAway; 
         awayButton.setText(isAway ? "Back" : "Go Away");
         
         try {
-            // Uses your existing sendAway(boolean) method
             Client.INSTANCE.sendAway(isAway); 
             } catch (IOException e) {
-            // Revert on error
             isAway = !isAway; 
             awayButton.setText(isAway ? "Back" : "Go Away");
             System.err.println("Error updating away status: " + e.getMessage());
