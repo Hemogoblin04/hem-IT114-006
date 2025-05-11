@@ -9,6 +9,7 @@ public class User {
     private boolean tookTurn = false;
     private int points = 0;
     private boolean isEliminated = false;
+    private boolean away = false;
     private String choice; 
 
     public int getPoints() {
@@ -111,5 +112,12 @@ public class User {
         this.choice = choice;
     }
 
+    public boolean isAway() {
+        return away;
+    }
+
+    public void setAway(boolean awayStatus) {
+        this.away = awayStatus;
+    }
     // Remove the typo method gettEliminated()
 }

@@ -23,6 +23,7 @@ import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.IRoomEvents;
 import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
+import Project.Common.AwayPayload;
 import Project.Common.Command;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
@@ -338,6 +339,14 @@ public enum Client {
                     }
                     wasCommand = true;
             }
+            else if (text.equalsIgnoreCase(Command.AWAY.command)) {
+                boolean wentAway = !myUser.isAway();
+                sendAway(wentAway);
+                LoggerUtil.INSTANCE.info(TextFX.colorize(
+                "You are now " + (wentAway ? "away" : "back"), 
+                wentAway ? Color.YELLOW : Color.GREEN));
+            wasCommand = true;
+        }
         }
         return wasCommand;
     }
@@ -378,11 +387,18 @@ public enum Client {
         sendToServer(rp);
     }
 
-public void sendCooldownToggle(boolean enabled) throws IOException {
-    CooldownPayload payload = new CooldownPayload();
-    payload.setCooldownEnabled(enabled);
-    sendToServer(payload);
-}
+    public void sendCooldownToggle(boolean enabled) throws IOException {
+        CooldownPayload cp = new CooldownPayload();
+        cp.setCooldownEnabled(enabled);
+        sendToServer(cp);
+    }
+
+    // In Client.java
+    public void sendAway(boolean awayStatus) throws IOException {
+        AwayPayload sa = new AwayPayload();
+        sa.setAway(awayStatus);
+        sendToServer(sa); // Your existing network method
+    }
 
     /**
      * Sends a room action to the server

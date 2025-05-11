@@ -202,12 +202,12 @@ public class GameRoom extends BaseGameRoom {
     }
 
     private void checkAllTookTurn() {
-        int numReady = clientsInRoom.values().stream()
-                .filter(sp -> sp.isReady() && !sp.isSpectator())
-                .toList().size();
+         int numReady = clientsInRoom.values().stream()
+            .filter(sp -> sp.isReady() && !sp.isSpectator() && !sp.isAway())
+            .toList().size();
         int numTookTurn = clientsInRoom.values().stream()
-                .filter(sp -> sp.isReady() && sp.didTakeTurn() && !sp.isSpectator())
-                .toList().size();
+            .filter(sp -> sp.isReady() && sp.didTakeTurn() && !sp.isSpectator() && !sp.isAway())
+            .toList().size();
         if (numReady == numTookTurn && numReady > 0) {
             relay(null,
                     String.format("All players have taken their turn (%d/%d) ending the round", numTookTurn, numReady));
@@ -219,9 +219,9 @@ public class GameRoom extends BaseGameRoom {
 
 
     protected void handleTurnAction(ServerThread currentUser, String exampleText) {
-        if (currentUser.isAway()) {
-            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You're marked as Away and cannot pick a move.");
-            return;
+        if (exampleText.equals("/away") || exampleText.equals("/back")) {
+        currentUser.setAway(exampleText.equals("/away"));
+        return;
         }
 
         if (currentUser.isSpectator()) {
@@ -312,13 +312,15 @@ private void broadcastReadyStatus(ServerThread player, boolean isReady) {
 }
 
 private void checkAllReady() {
-    long readyPlayers = clientsInRoom.values().stream()
-        .filter(sp -> !sp.isSpectator() && sp.isReady())
+long readyPlayers = clientsInRoom.values().stream()
+        .filter(sp -> !sp.isSpectator() && !sp.isAway() && sp.isReady())
         .count();
     
-    if (readyPlayers >= 1 && readyPlayers == clientsInRoom.values().stream()
-            .filter(sp -> !sp.isSpectator())
-            .count()) {
+    long totalPlayers = clientsInRoom.values().stream()
+        .filter(sp -> !sp.isSpectator() && !sp.isAway())
+        .count();
+        
+    if (readyPlayers == totalPlayers && totalPlayers > 0) {
         onSessionStart();
     }
 }
@@ -420,7 +422,7 @@ protected void round() {
         relay(null, "Round Start!");
         ArrayList<ServerThread> Clients = new ArrayList<>(
             clientsInRoom.values().stream()
-                .filter(sp -> !sp.getEliminated() && sp.isReady() && !sp.isSpectator())
+                .filter(sp -> !sp.getEliminated() && sp.isReady() && !sp.isAway() && !sp.isSpectator())
                 .toList()
         );
 

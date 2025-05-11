@@ -25,6 +25,7 @@
 ./Client/Views/UserDetailsPanel.java
 ./Client/Views/UserListItem.java
 ./Client/Views/UserListPanel.java
+./Common/AwayPayload.java
 ./Common/Command.java
 ./Common/ConnectionPayload.java
 ./Common/Constants.java

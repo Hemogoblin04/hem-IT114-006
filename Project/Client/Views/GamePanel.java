@@ -24,6 +24,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
     private CardLayout cardLayout;
     private static final String READY_PANEL = "READY";
     private static final String PLAY_PANEL = "PLAY";// example panel for this lesson
+    private boolean isAway = false;
     JPanel buttonPanel = new JPanel();
 
     @SuppressWarnings("unused")
@@ -101,21 +102,23 @@ private void buildChoiceButtons() {
 
     JButton awayButton = new JButton("Go Away");
     awayButton.addActionListener(event -> {
-        boolean goingAway = awayButton.getText().equals("Go Away");
-        awayButton.setText(goingAway ? "Back" : "Go Away");
-
+        isAway = !isAway; // Toggle state first
+        awayButton.setText(isAway ? "Back" : "Go Away");
+        
         try {
-            Client.INSTANCE.sendDoTurn(goingAway ? "/away" : "/back");
-        } catch (IOException e) {
-            e.printStackTrace();
+            // Uses your existing sendAway(boolean) method
+            Client.INSTANCE.sendAway(isAway); 
+            } catch (IOException e) {
+            // Revert on error
+            isAway = !isAway; 
+            awayButton.setText(isAway ? "Back" : "Go Away");
+            System.err.println("Error updating away status: " + e.getMessage());
         }
     });
     buttonPanel.add(awayButton);
-
     buttonPanel.revalidate();
     buttonPanel.repaint();
 }
-
 
     @Override
     public void onRoomAction(long clientId, String roomName, boolean isJoin, boolean isQuiet) {

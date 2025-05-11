@@ -35,5 +35,7 @@ public enum PayloadType {
        TIME,
 
        MODE,
+
+       AWAY,;
        
 }

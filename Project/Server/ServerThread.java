@@ -1,5 +1,6 @@
 package Project.Server;
 
+import Project.Common.AwayPayload;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
 import Project.Common.LoggerUtil;
@@ -211,12 +212,12 @@ public class ServerThread extends BaseServerThread {
     // End Send*() Methods
     private boolean away = false;
     public boolean isAway() {
-    return Away;
+    return away;
     }
 
-    public boolean Spectator = false;
+    public boolean spectator = false;
     public boolean isSpectator() {
-        return Spectator;
+        return spectator;
     }
 
     public String move;
@@ -243,7 +244,7 @@ public class ServerThread extends BaseServerThread {
                 break;
             case ROOM_JOIN:
             ConnectionPayload cp = (ConnectionPayload) incoming;
-            boolean isSpectator = cp.isSpectator(); 
+            boolean spectator = cp.isSpectator(); 
     
             currentRoom.handleJoinRoom(this, cp);
             break;
@@ -255,7 +256,7 @@ public class ServerThread extends BaseServerThread {
                 break;
             case READY:
                 // no data needed as the intent will be used as the trigger
-                if (Spectator) {
+                if (isSpectator()) {
                 sendMessage(Constants.DEFAULT_CLIENT_ID, "Spectators cannot ready up");
                 return;
                 }
@@ -270,17 +271,6 @@ public class ServerThread extends BaseServerThread {
                 // no data needed as the intent will be used as the trigger
                 try {
                     String message = incoming.getMessage().trim().toLowerCase();
-            
-                    if (message.equals("/away")) {
-                        isAway = true;
-                        sendMessage(Constants.DEFAULT_CLIENT_ID, "you're away, you cannot play");                        return;
-                    }
-            
-                    if (message.equals("/back")) {
-                        isAway = false;
-                        sendMessage(Constants.DEFAULT_CLIENT_ID, "Welcome back");                        return;
-                    }
-            
                     ((GameRoom) currentRoom).handleTurnAction(this, message);
                 } catch (Exception e) {
                     sendMessage(Constants.DEFAULT_CLIENT_ID, "You must be in a GameRoom to do a turn");
@@ -300,6 +290,18 @@ public class ServerThread extends BaseServerThread {
                     currentRoom.handleMessage(this, message);
                 }
                 break;
+                case AWAY: 
+            try {
+                AwayPayload awayPayload = (AwayPayload) incoming;
+                setAway(awayPayload.isAway());
+                
+                // Broadcast to room if needed
+                currentRoom.relay(this, getDisplayName() + " is " + 
+                    (away ? "now away" : "back"));
+            } catch (Exception e) {
+                LoggerUtil.INSTANCE.severe("Error processing away status", e);
+            }
+            break;
         }
     }
     
@@ -331,12 +333,12 @@ public class ServerThread extends BaseServerThread {
     private long lastTurnTime = 0;
 
     //status change setters
-    public void setSpectator(boolean Spectator) {
-        this.Spectator = Spectator;
+    public void setSpectator(boolean isSpectator) {
+        this.spectator = isSpectator;
     }
 
-    public void setAway(boolean away) {
-        this.away = away;
+    public void setAway(boolean isAway) {
+        this.away = isAway;
     }
 
 
@@ -354,7 +356,7 @@ public class ServerThread extends BaseServerThread {
     }
 
     public boolean getAway(){
-        return isAway;
+        return away;
     }
 
     public boolean getEliminated(){
