@@ -1,7 +1,7 @@
 package Project.Client;
 
 import Project.Common.Constants;
-import Project.Common.PointsPayload;
+
 public class User {
     private long clientId = Constants.DEFAULT_CLIENT_ID;
     private String clientName;
@@ -10,55 +10,60 @@ public class User {
     private int points = 0;
     private boolean isEliminated = false;
     private String choice; 
-    /**
-     * @return the points
-     */
+
     public int getPoints() {
         return points;
     }
 
     /**
-     * @param points the points to apply (positive or negative)
-     * 
+     * Changes points by specified amount (positive or negative)
+     * @param points the points to add/subtract
      */
     public void changePoints(int points) {
-        this.points += points;
-        if (this.points < 0) {
-            this.points = 0;
+        if (!isEliminated) {  // Only change points if not eliminated
+            this.points += points;
+            if (this.points < 0) {
+                this.points = 0;
+            }
         }
     }
 
     /**
+     * Sets points to exact value
      * @param points the points to set
      */
     public void setPoints(int points) {
-        this.points = points;
+        if (!isEliminated) {  // Only set points if not eliminated
+            this.points = points;
+            if (this.points < 0) {
+                this.points = 0;
+            }
+        }
     }
 
     /**
-     * @return the clientId
+     * Increments points by 1 (for wins)
      */
+    public void incrementPoints() {
+        if (!isEliminated) {
+            this.points++;
+        }
+    }
+
+    // Remove the duplicate changePoints() method
+
     public long getClientId() {
         return clientId;
     }
 
-    /**
-     * @param clientId the clientId to set
-     */
     public void setClientId(long clientId) {
         this.clientId = clientId;
     }
 
-    /**
-     * @return the username
-     */
     public String getClientName() {
         return clientName;
     }
 
-    /**
-     * @param username the username to set
-     */
     public void setClientName(String username) {
         this.clientName = username;
     }
@@ -79,46 +84,32 @@ public class User {
         this.clientId = Constants.DEFAULT_CLIENT_ID;
         this.clientName = null;
         this.isReady = false;
+        this.tookTurn = false;
     }
 
-    /**
-     * @return the tookTurn
-     */
     public boolean didTakeTurn() {
         return tookTurn;
     }
 
-    /**
-     * @param tookTurn the tookTurn to set
-     */
     public void setTookTurn(boolean tookTurn) {
         this.tookTurn = tookTurn;
     }
-    public boolean getEliminated(){
+
+    public boolean isEliminated() {
         return isEliminated;
     }
 
-    public void setEliminated(boolean placeholder){
+    public void setEliminated(boolean isEliminated) {
         this.isEliminated = isEliminated;
     }
 
-    public String getChoice(){
+    public String getChoice() {
         return choice;
     }
 
-    public void setChoice(String choice){
+    public void setChoice(String choice) {
         this.choice = choice;
     }
 
-
-    public void changePoints() {
-        this.points += points;
-        if (this.points < 0) {
-            this.points = 0;
-        }
-    }
-
-    boolean gettEliminated() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    // Remove the typo method gettEliminated()
 }

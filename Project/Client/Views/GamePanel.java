@@ -1,16 +1,5 @@
 package Project.Client.Views;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.io.IOException;
-import java.util.List;
-
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
 import Project.Client.CardView;
 import Project.Client.Client;
 import Project.Client.Interfaces.ICardControls;
@@ -18,7 +7,16 @@ import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IRoomEvents;
 import Project.Common.Constants;
 import Project.Common.Phase;
-import Project.Server.ServerThread;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.io.IOException;
+import java.util.List;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 
 public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
 
@@ -82,6 +80,8 @@ private void onModeChanged(String mode) {
 
 private void buildChoiceButtons() {
     buttonPanel.removeAll();
+
+    buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
 
     String[] choices = extendedMode
         ? new String[] { "Rock", "Paper", "Scissors", "Lizard", "Spock" }

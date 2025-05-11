@@ -28,6 +28,7 @@
 ./Common/Command.java
 ./Common/ConnectionPayload.java
 ./Common/Constants.java
+./Common/CooldownPayload.java
 ./Common/ElimPayload.java
 ./Common/Gamemode.java
 ./Common/LoggerUtil.java

@@ -2,6 +2,8 @@ package Project.Server;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import Project.Common.ConnectionPayload;
+
 import Project.Common.Constants;
 import Project.Common.LoggerUtil;
 import Project.Common.RoomAction;
@@ -242,12 +244,32 @@ public class Room implements AutoCloseable {
         }
     }
 
-    public void handleJoinRoom(ServerThread sender, String roomName) {
-        try {
-            Server.INSTANCE.joinRoom(roomName, sender);
-        } catch (RoomNotFoundException e) {
-            sender.sendMessage(Constants.DEFAULT_CLIENT_ID, String.format("Room %s doesn't exist", roomName));
+    public void handleJoinRoom(ServerThread sender, ConnectionPayload payload) {
+    String roomName = payload.getMessage();
+    boolean isSpectator = payload.isSpectator();
+    
+    try {
+        // Set spectator status before joining
+        sender.setSpectator(isSpectator);
+        
+        Server.INSTANCE.joinRoom(roomName, sender);
+        
+        if (isSpectator) {
+            sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "Joined as spectator");
         }
+    } catch (RoomNotFoundException e) {
+        sender.sendMessage(Constants.DEFAULT_CLIENT_ID, String.format("Room %s doesn't exist", roomName));
+    }
+    }
+
+    public void handleLeaveRoom(ServerThread sender) {
+    try {
+        Server.INSTANCE.joinRoom(Room.LOBBY, sender);
+    } catch (RoomNotFoundException e) {
+        // This should theoretically never happen since lobby should always exist
+        sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "Error returning to lobby");
+        LoggerUtil.INSTANCE.severe("Lobby not found!", e);
+    }
     }
 
     protected synchronized void handleDisconnect(BaseServerThread sender) {

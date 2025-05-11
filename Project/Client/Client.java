@@ -26,6 +26,7 @@ import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.Command;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.CooldownPayload;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
@@ -277,16 +278,30 @@ public enum Client {
                 wasCommand = true;
             } else if (text.startsWith(Command.JOIN_ROOM.command)) {
                 text = text.replace(Command.JOIN_ROOM.command, "").trim();
-                if (text == null || text.length() == 0) {
-                    LoggerUtil.INSTANCE
+                if (text.isEmpty()) {
+                LoggerUtil.INSTANCE
                             .warning(TextFX.colorize("This command requires a room name as an argument", Color.RED));
-                    return true;
+                return true;
                 }
-                sendRoomAction(text, RoomAction.JOIN);
+                ConnectionPayload payload = new ConnectionPayload();
+                payload.setPayloadType(PayloadType.ROOM_JOIN);
+                payload.setMessage(text);
+                payload.setSpectator(false);
+                sendToServer(payload);
+                wasCommand = true;
+            } else if (text.startsWith(Command.JOIN_SPECTATOR.command)) {
+                text = text.replace(Command.JOIN_SPECTATOR.command, "").trim();
+                if (text.isEmpty()) {
+                LoggerUtil.INSTANCE
+                        .warning(TextFX.colorize("This command requires a room name as an argument", Color.RED));                return true;
+                }
+                ConnectionPayload payload = new ConnectionPayload();
+                payload.setPayloadType(PayloadType.ROOM_JOIN);
+                payload.setMessage(text);
+                payload.setSpectator(true); 
+                sendToServer(payload);
                 wasCommand = true;
             } else if (text.startsWith(Command.LEAVE_ROOM.command) || text.startsWith("leave")) {
-                // Note: Accounts for /leave and /leaveroom variants (or anything beginning with
-                // /leave)
                 sendRoomAction(text, RoomAction.LEAVE);
                 wasCommand = true;
             } else if (text.startsWith(Command.LIST_ROOMS.command)) {
@@ -298,7 +313,7 @@ public enum Client {
                 sendReady();
                 wasCommand = true;
             } else if (text.toLowerCase().startsWith(Command.PICK.command)) {
-                if (myUser.getEliminated()) {
+                if (myUser.isEliminated()) {
                     LoggerUtil.INSTANCE.warning(TextFX.colorize("You have been eliminated and cannot make a move.", Color.RED));
                     return true;
                 }
@@ -325,7 +340,7 @@ public enum Client {
             }
         }
         return wasCommand;
-        }
+    }
     // Start Send*() methods
     public void sendDoTurn(String text) throws IOException {
         // NOTE for now using ReadyPayload as it has the necessary properties
@@ -362,6 +377,12 @@ public enum Client {
         rp.setMessage("/mode " + mode.trim().toLowerCase()); 
         sendToServer(rp);
     }
+
+public void sendCooldownToggle(boolean enabled) throws IOException {
+    CooldownPayload payload = new CooldownPayload();
+    payload.setCooldownEnabled(enabled);
+    sendToServer(payload);
+}
 
     /**
      * Sends a room action to the server

@@ -31,12 +31,16 @@ public class GameRoom extends BaseGameRoom {
     /** {@inheritDoc} */
     @Override
     protected void onClientAdded(ServerThread sp) {
-        // sync GameRoom state to new client
-        syncCurrentPhase(sp);
-        syncReadyStatus(sp);
-        syncTurnStatus(sp);
+       if (sp.isSpectator()) {
+            syncCurrentPhase(sp);
+            sp.setReady(false);
+        } else {
+            syncCurrentPhase(sp);
+            syncReadyStatus(sp);
+            syncTurnStatus(sp);
+        }
     }
-
+    
     /** {@inheritDoc} */
     @Override
     protected void onClientRemoved(ServerThread sp) {
@@ -199,13 +203,12 @@ public class GameRoom extends BaseGameRoom {
 
     private void checkAllTookTurn() {
         int numReady = clientsInRoom.values().stream()
-                .filter(sp -> sp.isReady())
+                .filter(sp -> sp.isReady() && !sp.isSpectator())
                 .toList().size();
         int numTookTurn = clientsInRoom.values().stream()
-                // ensure to verify the isReady part since it's against the original list
-                .filter(sp -> sp.isReady() && sp.didTakeTurn())
+                .filter(sp -> sp.isReady() && sp.didTakeTurn() && !sp.isSpectator())
                 .toList().size();
-        if (numReady == numTookTurn) {
+        if (numReady == numTookTurn && numReady > 0) {
             relay(null,
                     String.format("All players have taken their turn (%d/%d) ending the round", numTookTurn, numReady));
             onRoundEnd();
@@ -216,13 +219,16 @@ public class GameRoom extends BaseGameRoom {
 
 
     protected void handleTurnAction(ServerThread currentUser, String exampleText) {
-        // check if the client is in the room
         if (currentUser.isAway()) {
             currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "You're marked as Away and cannot pick a move.");
             return;
         }
-        
 
+        if (currentUser.isSpectator()) {
+            currentUser.sendMessage(Constants.DEFAULT_CLIENT_ID, "Spectators cannot participate in the game");
+            return;
+        }
+        // check if the client is in the room
         try {
             checkPlayerInRoom(currentUser);
             checkCurrentPhase(currentUser, Phase.IN_PROGRESS);
@@ -276,8 +282,49 @@ public class GameRoom extends BaseGameRoom {
 //Methods added by me 
 //sure
 //redone validation method to also check for RPS5
+
+// In Project.Server.GameRoom
+public void handleReady(ServerThread player) {
+    try {
+        checkPlayerInRoom(player);
+        checkCurrentPhase(player, Phase.READY);
+        
+        if (player.isSpectator()) {
+            player.sendMessage(Constants.DEFAULT_CLIENT_ID, "Spectators cannot ready up");
+            return;
+        }
+        
+        boolean newReadyState = !player.isReady();
+        player.setReady(newReadyState);
+        broadcastReadyStatus(player, newReadyState);
+        checkAllReady();
+    } catch (Exception e) {
+        LoggerUtil.INSTANCE.severe("Ready error", e);
+    }
+}
+
+private void broadcastReadyStatus(ServerThread player, boolean isReady) {
+    clientsInRoom.values().removeIf(sp -> {
+        boolean failed = !sp.sendReadyStatus(player.getClientId(), isReady);
+        if (failed) removeClient(sp);
+        return failed;
+    });
+}
+
+private void checkAllReady() {
+    long readyPlayers = clientsInRoom.values().stream()
+        .filter(sp -> !sp.isSpectator() && sp.isReady())
+        .count();
+    
+    if (readyPlayers >= 1 && readyPlayers == clientsInRoom.values().stream()
+            .filter(sp -> !sp.isSpectator())
+            .count()) {
+        onSessionStart();
+    }
+}
+
 private boolean isValidMove(String move) {
-        if (currentMode == GameMode.RPS3) {
+        if (currentGameMode == GameMode.RPS3) {
             return move.equals("rock") || move.equals("paper") || move.equals("scissors");
         } else {
             return move.equals("rock") || move.equals("paper") || move.equals("scissors") 
@@ -327,11 +374,10 @@ private void leaderBoard() {
         }
     }
 
-public GameMode currentMode = GameMode.RPS3;
 
 //Seperated round logic to make it easeier to change and test
 private boolean determineWinner(String move1, String move2) {
-        if (currentMode == GameMode.RPS3) {
+        if (currentGameMode == GameMode.RPS3) {
             return (move1.equals("rock") && move2.equals("scissors")) ||
                    (move1.equals("paper") && move2.equals("rock")) ||
                    (move1.equals("scissors") && move2.equals("paper"));
@@ -355,13 +401,26 @@ private boolean determineWinner(String move1, String move2) {
         syncPoints(loser);
     }
 
+    public void setSpectator(ServerThread user, boolean isSpectator) {
+        user.setSpectator(isSpectator);
+        if (isSpectator) {
+            // Reset any game-related states
+            user.setReady(false);
+            user.setTookTurn(false);
+            user.sendMessage(Constants.DEFAULT_CLIENT_ID, "You are now a spectator");
+        } else {
+            user.sendMessage(Constants.DEFAULT_CLIENT_ID, "You are now a player");
+        }
+        // Notify other clients if needed
+    }
+
 //revamped design after much hassle, lots of advice and genuine heartbreak HEM 
 protected void round() {
     try {
         relay(null, "Round Start!");
         ArrayList<ServerThread> Clients = new ArrayList<>(
             clientsInRoom.values().stream()
-                .filter(sp -> !sp.getEliminated() && sp.isReady())
+                .filter(sp -> !sp.getEliminated() && sp.isReady() && !sp.isSpectator())
                 .toList()
         );
 

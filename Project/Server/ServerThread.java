@@ -1,15 +1,12 @@
 package Project.Server;
 
-import Project.Client.User;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
-import Project.Common.ElimPayload;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.Phase;
 import Project.Common.PointsPayload;
-import Project.Common.ElimPayload;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomAction;
 import Project.Common.RoomResultPayload;
@@ -17,7 +14,6 @@ import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
 import Project.Common.TimerPayload;
 import Project.Common.TimerType;
-
 import java.net.Socket;
 import java.util.List;
 import java.util.Objects;
@@ -213,10 +209,16 @@ public class ServerThread extends BaseServerThread {
     }
 
     // End Send*() Methods
-    private boolean isAway = false;
+    private boolean away = false;
     public boolean isAway() {
-    return isAway;
+    return Away;
     }
+
+    public boolean Spectator = false;
+    public boolean isSpectator() {
+        return Spectator;
+    }
+
     public String move;
 
     @Override
@@ -225,7 +227,7 @@ public class ServerThread extends BaseServerThread {
         switch (incoming.getPayloadType()) {
             case CLIENT_CONNECT:
                 setClientName(((ConnectionPayload) incoming).getClientName().trim());
-
+                setSpectator(((ConnectionPayload) incoming).isSpectator());
                 break;
             case DISCONNECT:
                 currentRoom.handleDisconnect(this);
@@ -240,16 +242,23 @@ public class ServerThread extends BaseServerThread {
                 currentRoom.handleCreateRoom(this, incoming.getMessage());
                 break;
             case ROOM_JOIN:
-                currentRoom.handleJoinRoom(this, incoming.getMessage());
-                break;
+            ConnectionPayload cp = (ConnectionPayload) incoming;
+            boolean isSpectator = cp.isSpectator(); 
+    
+            currentRoom.handleJoinRoom(this, cp);
+            break;
             case ROOM_LEAVE:
-                currentRoom.handleJoinRoom(this, Room.LOBBY);
+                currentRoom.handleLeaveRoom(this);
                 break;
             case ROOM_LIST:
                 currentRoom.handleListRooms(this, incoming.getMessage());
                 break;
             case READY:
                 // no data needed as the intent will be used as the trigger
+                if (Spectator) {
+                sendMessage(Constants.DEFAULT_CLIENT_ID, "Spectators cannot ready up");
+                return;
+                }
                 try {
                     // cast to GameRoom as the subclass will handle all Game logic
                     ((GameRoom) currentRoom).handleReady(this);
@@ -319,7 +328,30 @@ public class ServerThread extends BaseServerThread {
 
     private boolean isEliminated = false;
     private String choice;
-    private int points = 0;
+    private long lastTurnTime = 0;
+
+    //status change setters
+    public void setSpectator(boolean Spectator) {
+        this.Spectator = Spectator;
+    }
+
+    public void setAway(boolean away) {
+        this.away = away;
+    }
+
+
+    //braodcast to players others status
+    private void broadcastStatus() {
+    
+    }
+
+    public long getLastTurnTime() {
+        return lastTurnTime;
+    }
+
+    public void setLastTurnTime(long time) {
+        this.lastTurnTime = time;
+    }
 
     public boolean getAway(){
         return isAway;
@@ -343,22 +375,22 @@ public class ServerThread extends BaseServerThread {
 
     public boolean sendPoints(int points) {
         PointsPayload p = new PointsPayload();
-        p.setPoints(points);
-        return sendToClient(p);
+        p.setPoints(this.user.getPoints());
+    return sendToClient(p);
     }
 
-    public int getPoints(){
-        return points;
+    // In ServerThread class:
+
+    public int getPoints() {
+        return this.user.getPoints();
     }
 
-    public void setPoints(int p){
+    public void setPoints(int p) {
         this.user.setPoints(p);
     }
 
     public void changePoints() {
-        this.points += 1;
-        if (this.points < 0) {
-            this.points = 0;
-        }
+        this.user.incrementPoints(); // Use the new method
     }
+
 }
